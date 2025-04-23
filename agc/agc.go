@@ -1,3 +1,3 @@
 package agc
 
-const GitRepo = ".git"
+const GitRepo string = ".agc"

@@ -13,7 +13,12 @@ func Init() {
 	err := os.Mkdir(GitRepo, 0750)
 	if err != nil && !os.IsExist(err) {
 		log.Fatal(err)
-		os.Exit(1)
+	}
+
+	// Create object directory
+	err = os.Mkdir(GitRepo+"/objects", 0750)
+	if err != nil {
+		log.Fatal("Failed to make ./agc/objects")
 	}
 
 	// On Windows, set hidden attr
@@ -21,5 +26,11 @@ func Init() {
 		cmd := exec.Command("attrib", "+H", GitRepo)
 		cmd.Run()
 	}
-	fmt.Println("Git repo initialized at ", GitRepo)
+
+	wd, err := os.Getwd()
+	if err != nil {
+		log.Fatal("Init -> Could not get current directory.")
+	}
+
+	fmt.Println("Git repo initialized at ", wd, GitRepo)
 }
