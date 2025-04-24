@@ -43,6 +43,11 @@ func ParseOsArgs(args []string) {
 		catFileCmd.Parse(args[2:])
 		agc.CatFile(args[2])
 
+	case "write-tree":
+		writeTreeCmd := flag.NewFlagSet("write-tree", flag.ExitOnError)
+
+		writeTreeCmd.Parse(args[2:])
+		agc.WriteTree()
 	default:
 		log.Println("valid command Not Found")
 	}
