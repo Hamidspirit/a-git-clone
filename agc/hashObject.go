@@ -8,33 +8,24 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+
+	"github.com/Hamidspirit/a-git-clone/util"
 )
 
-func HashObject(path, objectType *string, args []string) (string, string) {
+func HashObject(path, objectType string, filesname string) (fpath string, objectid string) {
 	// File path
 	var fp string
 
-	if *path == "" {
-		// Check if third argument args[3] exists
-		if len(args) >= 3 {
-			// Get current working directory
-			wd, err := os.Getwd()
-			if err != nil {
-				log.Fatal("Failed to get current directory:", err)
-			}
+	if path == "." {
+		// Construct file path
+		fp = util.FilePathParser(path, filesname)
 
-			// Construct file path
-			fp = filepath.Join(wd, args[2])
-
-			// check if file exists
-			if _, err := os.Stat(fp); os.IsNotExist(err) {
-				log.Fatalf("File does not exist: %s", fp)
-			}
-		} else {
-			log.Fatal("No path file specified with -p and no file name provided")
+		// check if file exists
+		if _, err := os.Stat(fp); os.IsNotExist(err) {
+			log.Fatalf("File does not exist: %s", fp)
 		}
 	} else {
-		fp = *path
+		fp = path
 	}
 
 	// Read and hash the file
@@ -54,7 +45,7 @@ func HashObject(path, objectType *string, args []string) (string, string) {
 	return fp, oid
 }
 
-func SaveHashedObject(reader *bufio.Reader, objectType *string) (string, error) {
+func SaveHashedObject(reader *bufio.Reader, objectType string) (string, error) {
 	hasher := sha1.New()
 
 	// Temp file to store data as i hash it
@@ -65,7 +56,7 @@ func SaveHashedObject(reader *bufio.Reader, objectType *string) (string, error) 
 	defer os.Remove(tmpFile.Name()) // in case there was an error
 
 	// Add the type of object and after add a null byte
-	tmpFile.WriteString(*objectType + "\x00")
+	tmpFile.WriteString(objectType + "\x00")
 
 	buffer := make([]byte, 4096) // 4KB chunks of data
 

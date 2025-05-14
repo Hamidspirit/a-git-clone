@@ -6,11 +6,14 @@ import (
 	"os"
 	"os/exec"
 	"runtime"
+
+	"github.com/Hamidspirit/a-git-clone/util"
 )
 
-func Init() {
+func Init(path string) {
+	fp := util.FilePathParser(path, GitRepo)
 
-	err := os.Mkdir(GitRepo, 0750)
+	err := os.Mkdir(fp, 0750)
 	if err != nil && !os.IsExist(err) {
 		log.Fatal(err)
 	}
@@ -27,10 +30,5 @@ func Init() {
 		cmd.Run()
 	}
 
-	wd, err := os.Getwd()
-	if err != nil {
-		log.Fatal("Init -> Could not get current directory.")
-	}
-
-	fmt.Println("Git repo initialized at ", wd, GitRepo)
+	fmt.Println("Git repo initialized at ", fp)
 }

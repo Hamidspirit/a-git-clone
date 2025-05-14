@@ -3,12 +3,10 @@ package util
 import (
 	"log"
 	"os"
-
-	"github.com/Hamidspirit/a-git-clone/agc"
 )
 
-func IsRepo() bool {
-	info, err := os.Stat(agc.GitRepo)
+func IsRepo(dir string) bool {
+	info, err := os.Stat(dir)
 	if os.IsNotExist(err) {
 		log.Fatal("No repository has been initiated.")
 	}

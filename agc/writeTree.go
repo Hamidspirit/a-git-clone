@@ -22,27 +22,59 @@ func WriteTree() {
 	}
 
 	fmt.Println("list of subdirectories")
-	err = filepath.WalkDir(root, visit)
+	tree := visit(root)
 	if err != nil {
 		log.Fatal("Failed to walk directory", err)
 	}
+
+	_ = visit(tree)
 }
 
-func visit(path string, d fs.DirEntry, err error) error {
+func visit(path string) (treeHash string) {
+	entries, err := os.ReadDir(path)
 	if err != nil {
-		return err
+		log.Fatal("Failed to visit path:", err)
 	}
 
-	if isIgnored(d) {
-		if d.IsDir() {
-			return fs.SkipDir
-		} else {
-			return nil
+	var te []TreeEntry
+
+	for _, entry := range entries {
+		fullPath := filepath.Join(path, entry.Name())
+
+		if isIgnored(entry) {
+			continue
 		}
-	}
 
-	fmt.Println("  ", path, d.IsDir())
-	return nil
+		if entry.IsDir() {
+			subtree := visit(fullPath)
+			if err != nil {
+				log.Fatal("Failed to visit sub-tree", err)
+			}
+			// Hash subtree
+			hash := visit(subtree)
+			te = append(te, TreeEntry{
+				ObjectType: "tree",
+				OID:        hash,
+				Name:       entry.Name(),
+			})
+		} else {
+			// this abomination is my fault
+			p := ""
+			ot := "blob"
+			fp, oid := HashObject(p, ot, entry.Name())
+
+			te = append(te, TreeEntry{
+				ObjectType: "blob",
+				OID:        oid,
+				Name:       entry.Name(),
+			})
+
+			fmt.Println("  fp:", fp, " oid:", oid)
+		}
+
+	}
+	// fmt.Println("  ", path, entry.IsDir())
+	return treeHash
 }
 
 func isIgnored(d fs.DirEntry) bool {

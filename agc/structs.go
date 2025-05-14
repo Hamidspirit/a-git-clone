@@ -11,3 +11,13 @@ type GitStruct struct {
 type Refs struct {
 	Heads map[string]interface{}
 }
+
+type Tree struct {
+	Entries []TreeEntry
+}
+
+type TreeEntry struct {
+	ObjectType string
+	OID        string
+	Name       string
+}
