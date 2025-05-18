@@ -1,6 +1,7 @@
 package agc
 
 import (
+	"crypto/sha1"
 	"fmt"
 	"io/fs"
 	"log"
@@ -18,62 +19,55 @@ var ignorePatterns = []string{
 func WriteTree() {
 	root, err := os.Getwd()
 	if err != nil {
-		log.Fatal("Failed to get current working direcetory", err)
+		log.Fatal("Failed to get current working directory:", err)
 	}
 
-	fmt.Println("list of subdirectories")
-	tree := visit(root)
-	if err != nil {
-		log.Fatal("Failed to walk directory", err)
-	}
-
-	_ = visit(tree)
+	treeOid := visit(root)
+	fmt.Println("Root tree OID:", treeOid)
 }
 
-func visit(path string) (treeHash string) {
+func visit(path string) string {
 	entries, err := os.ReadDir(path)
 	if err != nil {
-		log.Fatal("Failed to visit path:", err)
+		log.Fatal("Failed to read directory:", err)
 	}
 
-	var te []TreeEntry
+	var treeEntries []string
 
 	for _, entry := range entries {
-		fullPath := filepath.Join(path, entry.Name())
-
 		if isIgnored(entry) {
 			continue
 		}
 
+		fullPath := filepath.Join(path, entry.Name())
+		// fmt.Println("full path: ", fullPath)
+
 		if entry.IsDir() {
-			subtree := visit(fullPath)
-			if err != nil {
-				log.Fatal("Failed to visit sub-tree", err)
-			}
-			// Hash subtree
-			hash := visit(subtree)
-			te = append(te, TreeEntry{
-				ObjectType: "tree",
-				OID:        hash,
-				Name:       entry.Name(),
-			})
-		} else {
-			// this abomination is my fault
-			p := ""
-			ot := "blob"
-			fp, oid := HashObject(p, ot, entry.Name())
-
-			te = append(te, TreeEntry{
-				ObjectType: "blob",
-				OID:        oid,
-				Name:       entry.Name(),
-			})
-
-			fmt.Println("  fp:", fp, " oid:", oid)
+			subtreeOid := visit(fullPath)
+			treeEntries = append(treeEntries, fmt.Sprintf("tree %s %s", subtreeOid, entry.Name()))
+			fmt.Printf("\t tree %s %s \n", subtreeOid, entry.Name())
+			continue
 		}
 
+		hashobjs := HashObject(fullPath, "blob", []string{})
+		for _, item := range hashobjs {
+			fmt.Printf("\t blob %s %s\n", item.ObjectID, entry.Name())
+			treeEntries = append(treeEntries, fmt.Sprintf("blob %s %s", item.ObjectID, entry.Name()))
+
+		}
 	}
-	// fmt.Println("  ", path, entry.IsDir())
+
+	// Join tree entries and simulate tree object hash
+	treeContent := strings.Join(treeEntries, "\n")
+	treeHash := fmt.Sprintf("%x", sha1.Sum([]byte(treeContent)))
+
+	// Optional: Write tree content to a file
+	treePath := filepath.Join(".agc", "objects", treeHash)
+	err = os.WriteFile(treePath, []byte(treeContent), 0644)
+	if err != nil {
+		log.Fatal("Failed to write tree object:", err)
+	}
+
 	return treeHash
 }
 
@@ -82,7 +76,7 @@ func isIgnored(d fs.DirEntry) bool {
 
 	for _, pattern := range ignorePatterns {
 		if strings.HasPrefix(pattern, "*.") {
-			// Match file extension like *.log
+			// Match file extlnsion like *.log
 			if strings.HasSuffix(name, pattern[1:]) {
 				return true
 			}

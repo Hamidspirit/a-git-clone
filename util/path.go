@@ -33,8 +33,8 @@ func FilePathParser(path, name string) (fpath string) {
 }
 
 // returns the name of a file from list os OS args if exits
-func ExtractName(args []string) (name string) {
-	var filenames string
+func ExtractName(args []string) (name []string) {
+	var filenames []string
 
 	for _, item := range args {
 
@@ -45,7 +45,7 @@ func ExtractName(args []string) (name string) {
 		}
 
 		if !info.IsDir() {
-			filenames = item
+			filenames = append(filenames, item)
 		}
 	}
 

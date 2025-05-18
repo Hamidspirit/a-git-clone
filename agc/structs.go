@@ -13,11 +13,18 @@ type Refs struct {
 }
 
 type Tree struct {
-	Entries []TreeEntry
+	TreeHash string
+	Entries  []TreeLeaf
 }
 
-type TreeEntry struct {
+type TreeLeaf struct {
 	ObjectType string
 	OID        string
 	Name       string
+}
+
+type HashedObject struct {
+	FPath    string
+	ObjectID string
+	Name     string
 }

@@ -12,37 +12,73 @@ import (
 	"github.com/Hamidspirit/a-git-clone/util"
 )
 
-func HashObject(path, objectType string, filesname string) (fpath string, objectid string) {
+func HashObject(path, objectType string, filesnames []string) (hashedObj []HashedObject) {
 	// File path
-	var fp string
+	var hObjects []HashedObject
 
 	if path == "." {
-		// Construct file path
-		fp = util.FilePathParser(path, filesname)
+		for _, item := range filesnames {
+			// Construct file path
+			fp := util.FilePathParser(path, item)
+
+			// check if file exists
+			if _, err := os.Stat(fp); os.IsNotExist(err) {
+				log.Fatalf("File does not exist: %s", fp)
+			}
+
+			// Read and hash the file
+			file, err := os.Open(fp)
+			if err != nil {
+				log.Fatal("Failed to open file:", err)
+			}
+			defer file.Close()
+
+			// Add object file to repo
+			reader := bufio.NewReader(file)
+			oid, err := SaveHashedObject(reader, objectType)
+			if err != nil {
+				log.Fatal("Failed to add object file to repo")
+			}
+
+			hObjects = append(hObjects, HashedObject{
+				FPath:    fp,
+				ObjectID: oid,
+				Name:     item,
+			})
+		}
+
+	} else {
 
 		// check if file exists
-		if _, err := os.Stat(fp); os.IsNotExist(err) {
-			log.Fatalf("File does not exist: %s", fp)
+		if _, err := os.Stat(path); os.IsNotExist(err) {
+			log.Fatalf("File does not exist: %s", path)
 		}
-	} else {
-		fp = path
+
+		// Read and hash the file
+		file, err := os.Open(path)
+		if err != nil {
+			log.Fatal("Failed to open file:", err)
+		}
+		defer file.Close()
+
+		// Add object file to repo
+		reader := bufio.NewReader(file)
+		oid, err := SaveHashedObject(reader, objectType)
+		if err != nil {
+			log.Fatal("Failed to add object file to repo")
+		}
+
+		// extract the name of file from path
+		names := util.ExtractName([]string{path})
+
+		hObjects = append(hObjects, HashedObject{
+			FPath:    path,
+			ObjectID: oid,
+			Name:     names[0],
+		})
 	}
 
-	// Read and hash the file
-	file, err := os.Open(fp)
-	if err != nil {
-		log.Fatal("Failed to open file:", err)
-	}
-	defer file.Close()
-
-	// Add object file to repo
-	reader := bufio.NewReader(file)
-	oid, err := SaveHashedObject(reader, objectType)
-	if err != nil {
-		log.Fatal("Failed to add object file to repo")
-	}
-
-	return fp, oid
+	return hObjects
 }
 
 func SaveHashedObject(reader *bufio.Reader, objectType string) (string, error) {

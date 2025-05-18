@@ -38,9 +38,11 @@ func ParseOsArgs(args []string) {
 		// Parse the flags starting from args[2:]
 		hashObjectCmd.Parse(args[2:])
 		path := util.PathParser(*objectPath)
-		file := util.ExtractName(args[2:])
-		fp, hash := agc.HashObject(path, *objectType, file)
-		fmt.Printf("hash of %s:\n %s", fp, hash)
+		files := util.ExtractName(args[2:])
+		hashobj := agc.HashObject(path, *objectType, files)
+		for _, obj := range hashobj {
+			fmt.Printf("hash of %s:\n %s\n", obj.FPath, obj.ObjectID)
+		}
 
 	case "cat-file":
 		catFileCmd := flag.NewFlagSet("cat-file", flag.ExitOnError)
