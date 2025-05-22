@@ -2,6 +2,7 @@ package agc
 
 import (
 	"crypto/sha1"
+	"encoding/hex"
 	"fmt"
 	"io/fs"
 	"log"
@@ -59,14 +60,7 @@ func visit(path string) string {
 
 	// Join tree entries and simulate tree object hash
 	treeContent := strings.Join(treeEntries, "\n")
-	treeHash := fmt.Sprintf("%x", sha1.Sum([]byte(treeContent)))
-
-	// Optional: Write tree content to a file
-	treePath := filepath.Join(".agc", "objects", treeHash)
-	err = os.WriteFile(treePath, []byte(treeContent), 0644)
-	if err != nil {
-		log.Fatal("Failed to write tree object:", err)
-	}
+	treeHash := SaveTreeObject(treeContent)
 
 	return treeHash
 }
@@ -87,4 +81,30 @@ func isIgnored(d fs.DirEntry) bool {
 	}
 
 	return false
+}
+
+func SaveTreeObject(data string) (treehash string) {
+	final := []byte("tree\x00" + data)
+	hasher := sha1.New()
+
+	hasher.Write(final)
+
+	treehash = hex.EncodeToString(hasher.Sum(nil))
+
+	treepath := filepath.Join(GitRepo, "objects", treehash)
+	file, err := os.Create(treepath)
+	if err != nil {
+		log.Fatal("failed to create tree file:", err)
+	}
+	defer file.Close()
+
+	n, err := file.Write(final)
+	if err != nil {
+		log.Fatal("failed to write tree file", err)
+	}
+
+	if n != len(final) {
+		log.Fatalf("Incomplete write: expected %d, wrote %d", len(final), n)
+	}
+	return treehash
 }

@@ -1,5 +1,6 @@
 package agc
 
+// i actually dont use most of this structs currently
 // GitSruct is my main repo handler
 type GitStruct struct {
 	HEAD    string
@@ -12,19 +13,14 @@ type Refs struct {
 	Heads map[string]interface{}
 }
 
-type Tree struct {
-	TreeHash string
-	Entries  []TreeLeaf
-}
-
-type TreeLeaf struct {
-	ObjectType string
-	OID        string
-	Name       string
-}
-
 type HashedObject struct {
 	FPath    string
 	ObjectID string
 	Name     string
+}
+
+type TreeEntrie struct {
+	Mode string
+	Path string
+	Hash string
 }
