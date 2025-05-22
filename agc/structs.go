@@ -19,8 +19,8 @@ type HashedObject struct {
 	Name     string
 }
 
-type TreeEntrie struct {
-	Mode string
-	Path string
+type TreeEntry struct {
+	Type string
 	Hash string
+	Name string
 }

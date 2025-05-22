@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-func CatFile(objectHash string) {
+func CatFile(objectHash string) (objectType, data string) {
 	fp := filepath.Join(GitRepo, "objects", objectHash)
 	file, err := os.ReadFile(fp)
 	if err != nil {
@@ -19,4 +19,5 @@ func CatFile(objectHash string) {
 	// fmt.Println("did Null byte exist or nah: ", parts[0])
 
 	fmt.Printf("Contents of file %s: \n %s", objectHash, parts[1])
+	return parts[0], parts[1]
 }
