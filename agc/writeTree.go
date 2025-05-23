@@ -17,7 +17,7 @@ var ignorePatterns = []string{
 	"agc.exe",
 }
 
-func WriteTree() {
+func WriteTree() (treeHash string) {
 	root, err := os.Getwd()
 	if err != nil {
 		log.Fatal("Failed to get current working directory:", err)
@@ -25,6 +25,7 @@ func WriteTree() {
 
 	treeOid := visit(root)
 	fmt.Println("Root tree OID:", treeOid)
+	return treeOid
 }
 
 func visit(path string) string {

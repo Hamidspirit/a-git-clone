@@ -29,7 +29,7 @@ func ParseOsArgs(args []string) {
 		msgFlag := commitCmd.String("m", "commit added", "Add Message to Commits")
 
 		commitCmd.Parse(args[2:])
-		fmt.Println(*msgFlag)
+		agc.Commit(*msgFlag)
 	case "hash-object":
 		hashObjectCmd := flag.NewFlagSet("hash-object", flag.ExitOnError)
 		objectPath := hashObjectCmd.String("p", ".", "Path to object")
@@ -56,6 +56,12 @@ func ParseOsArgs(args []string) {
 
 		writeTreeCmd.Parse(args[2:])
 		agc.WriteTree()
+	case "read-tree":
+		readTreeCmd := flag.NewFlagSet("read-tree", flag.ExitOnError)
+		treeHash := readTreeCmd.String("h", "", "Hash of the tree you want to write to dir")
+
+		readTreeCmd.Parse(args[2:])
+		agc.ReadTree(*treeHash, false)
 	default:
 		log.Println("valid command Not Found")
 	}

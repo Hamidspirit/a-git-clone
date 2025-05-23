@@ -1,4 +1,5 @@
 # A Git Clone
+This might be single worst piece of code ever written, and the honour is mine.
 
 
 ## CLI

@@ -2,6 +2,7 @@ package agc
 
 import (
 	"fmt"
+	"io/fs"
 	"log"
 	"os"
 	"path/filepath"
@@ -10,7 +11,11 @@ import (
 	"github.com/Hamidspirit/a-git-clone/util"
 )
 
-func ReadTree(treeHash string) {
+func ReadTree(treeHash string, purged bool) {
+	if !purged {
+		emptyCurrentDir()
+		purged = true
+	}
 	objType, treedata := CatFile(treeHash)
 	if objType != "tree" {
 		log.Fatal("expected tree object got this:", objType)
@@ -43,7 +48,7 @@ func ReadTree(treeHash string) {
 			}
 
 			// recurse
-			ReadTree(entry.Hash)
+			ReadTree(entry.Hash, true)
 		} else {
 			log.Fatal("unknown entry type: ", entry.Type)
 		}
@@ -68,4 +73,50 @@ func ParseTree(data string) ([]TreeEntry, error) {
 	}
 	return entries, nil
 
+}
+
+func emptyCurrentDir() error {
+	return filepath.WalkDir(".", func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+
+		// skip root itself
+		if path == "." {
+			return nil
+		}
+
+		// convert to relative path for consistency
+		// relpath , err := filepath.Rel(".", path)
+		// if err != nil {
+		// 	return nil
+		// }
+
+		if isIgnored(d) {
+			if d.IsDir() {
+				return filepath.SkipDir // dont decent into ignored dir
+			}
+			return nil
+		}
+
+		info, err := d.Info()
+		if err != nil {
+			return nil
+		}
+
+		if !d.IsDir() && info.Mode().IsRegular() {
+			return os.Remove(path)
+		}
+
+		// if it si a directory
+		if d.IsDir() {
+			err := os.Remove(path)
+			if err != nil && !os.IsNotExist(err) {
+				// ignore if dir is non empty or error
+				return nil
+			}
+		}
+		return nil
+
+	})
 }
