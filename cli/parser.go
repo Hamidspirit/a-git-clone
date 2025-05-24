@@ -46,7 +46,7 @@ func ParseOsArgs(args []string) {
 
 	case "cat-file":
 		catFileCmd := flag.NewFlagSet("cat-file", flag.ExitOnError)
-		fid := catFileCmd.String("p", "", "print content of file with this hash")
+		fid := catFileCmd.String("h", "", "print content of file with this hash")
 
 		catFileCmd.Parse(args[2:])
 		agc.CatFile(*fid)

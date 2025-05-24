@@ -5,14 +5,26 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 )
 
 func Commit(msg string) {
 	treehash := WriteTree()
-	commit := fmt.Sprintf("tree %s\n\n%s", treehash, msg)
-	commithash := fmt.Sprintf("%x", sha1.Sum([]byte(commit)))
-	fmt.Printf("commit hash: %s\ncommit:\n\t %s", commithash, commit)
+	var commit string
 
+	commit += fmt.Sprintf("tree %s\n", treehash)
+
+	head, b := getHead()
+	if b {
+		for _, h := range head {
+			parenthash := strings.Split(h, " ")
+			commit += "parent" + parenthash[1] + "\n"
+		}
+	}
+	commit += msg
+
+	commithash := fmt.Sprintf("%x", sha1.Sum([]byte(commit)))
+	fmt.Printf("commit hash: %s\ncommit:\n %s", commithash, commit)
 	err := SaveCommitObj(commit)
 	if err != nil {
 		log.Fatal("Failed to create commit object")
@@ -27,4 +39,15 @@ func SaveCommitObj(data string) error {
 	}
 	file.Write([]byte(data))
 	return nil
+}
+
+func getHead() ([]string, bool) {
+	head, err := os.ReadFile(GitRepo + "/Head")
+	if err != nil {
+		return []string{}, false
+	}
+
+	li := strings.Split(string(head), "\n")
+
+	return li[:len(li)-1], true
 }
